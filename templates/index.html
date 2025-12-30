@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Food Image Classifier</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #eaeaea;
+        }
+
+        .card {
+            background: #121212;
+            width: 95%;
+            max-width: 900px;
+            padding: 35px 40px;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding-bottom: 3%;
+        }
+
+        h4{
+            display: flex;            /* enable flex */
+    flex-direction: column;   /* stack prediction and confidence vertically */
+    justify-content: center;  /* vertical centering */
+    align-items: center; 
+        }
+
+        .layout {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .left,
+        .right {
+            flex: 1;
+        }
+
+        .upload-box {
+            border: 2px dashed #3fa9f5;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: #bcdcff;
+            transition: background 0.3s, border-color 0.3s;
+
+        }
+
+        .upload-box:hover {
+            background: rgba(63, 169, 245, 0.08);
+            border-color: #67c1ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        button {
+
+            margin-top: 25px;
+            padding: 10px 15px;
+            background: #3fa9f5;
+            color: #121212;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #67c1ff;
+        }
+
+        .image-box {
+            height: 220px;
+            /* FIXED HEIGHT */
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-box img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            object-fit: contain;
+        }
+
+        .result {
+            margin: 18px auto 0 auto;
+            width: 300px;
+            /* margin-top: 18px; */
+            height: 100px;
+            text-align: center;
+            background: rgb(71, 172, 120);
+            border-radius: 7px;
+            display: flex;            /* enable flex */
+    flex-direction: column;   /* stack prediction and confidence vertically */
+    justify-content: center;  /* vertical centering */
+    align-items: center; 
+        }
+        .pred{
+            font-weight: 650;
+            font-size: 20px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .prediction {
+            margin: 0px auto 0 auto;
+            font-size: 20px;
+            font-weight: 600;
+            /* margin-bottom: 5px; */
+            font-family: 'Times New Roman', Times, serif;
+            color: #0e2e21;
+        }
+
+        .confidence {
+            font-size: 14px;
+            color: #0e2e21;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        footer {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #777;
+            text-align: right;
+        }
+
+        .categories {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #0e0e0e;
+            border: 1px solid #2a2a2a;
+        }
+
+        .categories h4 {
+            margin: 0 0 12px 0;
+            color: #9ad1ff;
+            font-size: 15px;
+        }
+
+        .categories ul {
+            margin: 0;
+            padding-left: 18px;
+            columns: 2;
+            /* better space usage */
+            font-size: 14px;
+            color: #cfcfcf;
+        }
+
+        .categories li {
+            margin-bottom: 6px;
+        }
+
+        .tick {
+            color: #4caf50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+
+
+        @media (max-width: 800px) {
+            .layout {
+                flex-direction: column;
+                gap: 25px;
+            }
+
+            .image-box img {
+                max-height: 240px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>🍽️ Food Image Classifier</h2>
+        <div class="layout">
+            <!-- LEFT SIDE -->
+            <div class="left">
+                <form action="/" method="POST" enctype="multipart/form-data">
+                    <label class="upload-box">
+                        Click to upload food image
+                        <input type="file" name="file" accept="image/*" required onchange="previewImage(event)">
+                    </label>
+                    <div> <button type="submit">Predict</button> </div>
+                    <!-- FOOD CATEGORIES -->
+                    <div class="categories">
+                        <h4>🥗 Food Categories</h4>
+                        <ul>
+                            {% for food in classes %}
+                            <li>{{ food.replace('_', ' ').title() }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+
+            <!-- RIGHT SIDE -->
+            <div class="right">
+           
+                <div class="image-box">
+                    <img id="preview-img"
+                        src="{% if filename %}{{ url_for('static', filename='uploads/' + filename) }}{% endif %}" {% if
+                        not filename %}style="display:none;" {% endif %}>
+                </div>
+
+                {% if filename %}
+                <div class="result" id="prediction-box">
+                    <div class="pred">PREDICTION ⭐</div>
+                    <div class="prediction">
+                        {{ label.replace('_', ' ') | upper }}
+                    </div>
+                    <div class="confidence">
+                        Confidence: {{ (confidence * 100) | round(2) }}%
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <footer>
+            EfficientNet · TensorFlow · Flask
+            <div>Riya Mehta</div>
+        </footer>
+    </div>
+
+    <script>
+
+        function previewImage(event) {
+            const img = document.getElementById('preview-img');
+            img.src = URL.createObjectURL(event.target.files[0]);
+            img.style.display = 'block';
+
+            const predictionBox = document.getElementById('prediction-box');
+            if (predictionBox) {
+                predictionBox.style.display = 'none';
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
