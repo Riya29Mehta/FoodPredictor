@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 import tensorflow as tf
 import numpy as np
-
+import os
 from tensorflow.keras.applications import efficientnet
 
 import os
@@ -55,6 +55,6 @@ def index():
     # return render_template('index.html', filename=None)
     return render_template("index.html", classes=class_names)
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
-if __name__ == '__main__':
-    app.run()
